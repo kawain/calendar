@@ -25,71 +25,24 @@ holidays = [
 
 # 日本語の曜日設定
 calendar.setfirstweekday(calendar.SUNDAY)
-calendar.month_name = [
-    None,
-    "1月",
-    "2月",
-    "3月",
-    "4月",
-    "5月",
-    "6月",
-    "7月",
-    "8月",
-    "9月",
-    "10月",
-    "11月",
-    "12月",
-]
 calendar.day_name = ["日", "月", "火", "水", "木", "金", "土"]
 
 
 def create_calendar_html_with_holidays():
+    with open("./style.css", "r", encoding="utf-8") as f:
+        css = f.read()
+
     year = 2025
     html = "<html><head><style>"
-    html += """
-body {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-}
-
-h2 {
-  text-align: center;
-}
-
-table {
-  border-collapse: collapse;
-  margin: 10px;
-}
-
-th,
-td {
-  border: 1px solid black;
-  padding: 5px;
-  text-align: center;
-}
-
-th {
-  background-color: #eee;
-}
-
-td {
-  height: 50px;
-  vertical-align: top;
-}
-
-.weekend,
-.holiday {
-  background-color: #ccc;
-  font-weight: bold;
-}
-
-    """
-    html += "</style></head><body>"
+    html += css
+    html += (
+        f"""</style></head><body><h1>{year} (令和7) 年</h1><div class="container">"""
+    )
 
     for month in range(1, 13):
         cal = calendar.monthcalendar(year, month)
-        html += f"<div><h2>(R7) {year}年{month}月</h2>"  # divで囲む
+        div_id = ' class="break-after"' if month == 6 else ""
+        html += f"<div{div_id}><h2>{month}月</h2>"  # divで囲む
         html += "<table>"
         html += "<tr>" + "".join(f"<th>{d}</th>" for d in calendar.day_name) + "</tr>"
 
@@ -109,7 +62,8 @@ td {
             html += "</tr>"
         html += "</table></div>"  # 閉じdivタグ
 
-    html += "</body></html>"
+    html += "</div></body></html>"
+
     return html
 
 
