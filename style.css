@@ -33,6 +33,10 @@ td {
   vertical-align: top;
 }
 
+.weekend {
+  background-color: #f2f2f2;
+}
+
 .holiday {
   background-color: #ccc;
   font-weight: bold;

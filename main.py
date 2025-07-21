@@ -1,72 +1,124 @@
 import calendar
+from datetime import date
 
-# 令和7年（2025年）の国民の祝日・休日
+# 国民の祝日・休日
+# https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html
+# 国民の祝日CSVから
 holidays = [
-    "1月1日",
-    "1月13日",
-    "2月11日",
-    "2月23日",
-    "2月24日",
-    "3月20日",
-    "4月29日",
-    "5月3日",
-    "5月4日",
-    "5月5日",
-    "5月6日",
-    "7月21日",
-    "8月11日",
-    "9月15日",
-    "9月23日",
-    "10月13日",
-    "11月3日",
-    "11月23日",
-    "11月24日",
+    "2025/1/1",
+    "2025/1/13",
+    "2025/2/11",
+    "2025/2/23",
+    "2025/2/24",
+    "2025/3/20",
+    "2025/4/29",
+    "2025/5/3",
+    "2025/5/4",
+    "2025/5/5",
+    "2025/5/6",
+    "2025/7/21",
+    "2025/8/11",
+    "2025/9/15",
+    "2025/9/23",
+    "2025/10/13",
+    "2025/11/3",
+    "2025/11/23",
+    "2025/11/24",
+    "2026/1/1",
+    "2026/1/12",
+    "2026/2/11",
+    "2026/2/23",
+    "2026/3/20",
+    "2026/4/29",
+    "2026/5/3",
+    "2026/5/4",
+    "2026/5/5",
+    "2026/5/6",
+    "2026/7/20",
+    "2026/8/11",
+    "2026/9/21",
+    "2026/9/22",
+    "2026/9/23",
+    "2026/10/12",
+    "2026/11/3",
+    "2026/11/23",
 ]
 
 # 日本語の曜日設定
 calendar.setfirstweekday(calendar.SUNDAY)
-calendar.day_name = ["日", "月", "火", "水", "木", "金", "土"]
+WEEKDAY_NAMES_JP = ["日", "月", "火", "水", "木", "金", "土"]
 
 
 def create_calendar_html_with_holidays():
     with open("./style.css", "r", encoding="utf-8") as f:
         css = f.read()
 
-    year = 2025
-    html = "<html><head><style>"
-    html += css
-    html += (
-        f"""</style></head><body><h1>{year} (令和7) 年</h1><div class="container">"""
-    )
+    start_date_str = "2025-07-01"
+    end_date_str = "2026-12-31"
 
-    for month in range(1, 13):
-        cal = calendar.monthcalendar(year, month)
-        div_id = ' class="break-after"' if month == 6 else ""
-        html += f"<div{div_id}><h2>{month}月</h2>"  # divで囲む
-        html += "<table>"
-        html += "<tr>" + "".join(f"<th>{d}</th>" for d in calendar.day_name) + "</tr>"
+    start_dt = date.fromisoformat(start_date_str)
+    end_dt = date.fromisoformat(end_date_str)
+
+    # 祝日を検索しやすいようにsetに変換
+    holidays_set = set(holidays)
+
+    html_parts = []
+    html_parts.append("<html><head><style>")
+    html_parts.append(css)
+    html_parts.append(f'</style></head><body><div class="container">')
+
+    current_year = start_dt.year
+    current_month = start_dt.month
+    month_count = 0
+
+    while date(current_year, current_month, 1) <= end_dt:
+        cal = calendar.monthcalendar(current_year, current_month)
+
+        is_last_month = current_year == end_dt.year and current_month == end_dt.month
+        div_class = (
+            ' class="break-after"'
+            if (month_count + 1) % 6 == 0 and not is_last_month
+            else ""
+        )
+
+        month_html = [f"<div{div_class}><h2>{current_year}年{current_month}月</h2>"]
+        month_html.append("<table>")
+        month_html.append(
+            "<tr>" + "".join(f"<th>{d}</th>" for d in WEEKDAY_NAMES_JP) + "</tr>"
+        )
 
         for week in cal:
-            html += "<tr>"
+            month_html.append("<tr>")
             for i, day in enumerate(week):
                 if day == 0:
-                    html += "<td></td>"
+                    month_html.append("<td></td>")
                 else:
                     classes = []
-                    if i == 0 or i == 6:  # 土日
+                    # 日曜日は0, 土曜日は6
+                    if i == 0 or i == 6:
                         classes.append("weekend")
-                    if f"{month}月{day}日" in holidays:  # 祝日
+
+                    date_str = f"{current_year}/{current_month}/{day}"
+                    if date_str in holidays_set:
                         classes.append("holiday")
+
                     class_attr = f" class=\"{' '.join(classes)}\"" if classes else ""
-                    html += f"<td{class_attr}>{day}</td>"
-            html += "</tr>"
-        html += "</table></div>"  # 閉じdivタグ
+                    month_html.append(f"<td{class_attr}>{day}</td>")
+            month_html.append("</tr>")
+        month_html.append("</table></div>")
+        html_parts.append("".join(month_html))
 
-    html += "</div></body></html>"
+        # 次の月へ
+        current_month += 1
+        if current_month > 12:
+            current_month = 1
+            current_year += 1
+        month_count += 1
 
-    return html
+    html_parts.append("</div></body></html>")
+    return "".join(html_parts)
 
 
 # HTMLファイルとして保存
-with open("calendar_2025_with_holidays.html", "w", encoding="utf-8") as f:
+with open("calendar_2025_2026_with_holidays.html", "w", encoding="utf-8") as f:
     f.write(create_calendar_html_with_holidays())
